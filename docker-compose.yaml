@@ -1,0 +1,74 @@
+version: '3'
+
+services:
+  rabbitmq_add_user:
+    container_name: rabbitmq-add-user
+    image: rabbitmq:${RABBITMQ_VERSION}-alpine-custom
+    hostname: rabbitmq-add-user
+    environment:
+      - TZ=Asia/Tokyo
+      - RABBITMQ_DEFAULT_USER
+      - RABBITMQ_DEFAULT_PASS
+    volumes:
+      - ./context/create-user-entrypoint.sh:/usr/local/bin/create-user-entrypoint.sh
+    entrypoint: /usr/local/bin/create-user-entrypoint.sh
+    depends_on:
+      - rabbitmq_1
+    networks:
+      rabbitmq_network:
+
+  rabbitmq_1:
+    container_name: rabbitmq-1
+    hostname: rabbitmq-1
+    build:
+      context: ./context
+      args:
+        - RABBITMQ_VERSION=${RABBITMQ_VERSION}
+    image: rabbitmq:${RABBITMQ_VERSION}-alpine-custom
+    environment:
+      - TZ=Asia/Tokyo
+      - RABBITMQ_DEFAULT_USER
+      - RABBITMQ_DEFAULT_PASS
+      - RABBITMQ_DEFAULT_VHOST
+    command:
+      - /bin/sh
+      - -c
+      - |
+        cp -p /tmp/.erlang.cookie /var/lib/rabbitmq/
+        ls -al /var/lib/rabbitmq/
+        rabbitmq-server
+    networks:
+      rabbitmq_network:
+
+  rabbitmq_2:
+    container_name: rabbitmq-2
+    hostname: rabbitmq-2
+    image: rabbitmq:${RABBITMQ_VERSION}-alpine-custom
+    environment:
+      - TZ=Asia/Tokyo
+    volumes:
+      - ./context/cluster-entrypoint.sh:/usr/local/bin/cluster-entrypoint.sh
+    entrypoint: /usr/local/bin/cluster-entrypoint.sh
+    depends_on:
+      - rabbitmq_1
+    networks:
+      rabbitmq_network:
+
+  haproxy_rabbitmq:
+    container_name: rabbitmq-haproxy
+    image: haproxy:1.7
+    volumes:
+      - ./context/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      - rabbitmq_1
+      - rabbitmq_2
+    ports:
+      - 1936:1936
+      - 15672:15672
+      - 5672:5672
+    networks:
+      rabbitmq_network:
+
+networks:
+  rabbitmq_network:
+    name: rabbitmq-network
