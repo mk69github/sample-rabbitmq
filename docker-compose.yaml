@@ -3,7 +3,7 @@ version: '3'
 services:
   rabbitmq_add_user:
     container_name: rabbitmq-add-user
-    image: rabbitmq:${RABBITMQ_VERSION}-alpine-custom
+    image: rabbitmq:${RABBITMQ_VERSION}-alpine
     hostname: rabbitmq-add-user
     environment:
       - TZ=Asia/Tokyo
@@ -24,7 +24,7 @@ services:
       context: ./context
       args:
         - RABBITMQ_VERSION=${RABBITMQ_VERSION}
-    image: rabbitmq:${RABBITMQ_VERSION}-alpine-custom
+    image: rabbitmq:${RABBITMQ_VERSION}-alpine
     environment:
       - TZ=Asia/Tokyo
       - RABBITMQ_DEFAULT_USER
@@ -43,7 +43,7 @@ services:
   rabbitmq_2:
     container_name: rabbitmq-2
     hostname: rabbitmq-2
-    image: rabbitmq:${RABBITMQ_VERSION}-alpine-custom
+    image: rabbitmq:${RABBITMQ_VERSION}-alpine
     environment:
       - TZ=Asia/Tokyo
     volumes:
